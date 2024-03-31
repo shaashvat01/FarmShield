@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const tf = require('@tensorflow/tfjs-node'); // Import TensorFlow.js for Node.js
 const fs = require('fs');
+const { predict } = require('./wheat_model'); // Import the predict function from wheat_model.js
 
 const app = express();
 
@@ -30,20 +31,6 @@ async function loadGlobalModel() {
 // Immediately invoke the model loading to ensure it's done before any request comes in
 loadGlobalModel().catch(console.error);
 
-// Function to process image and make a prediction
-async function predictImage(imagePath) {
-    const imageBuffer = fs.readFileSync(imagePath);
-    let tfimage = tf.node.decodeImage(imageBuffer, 3);
-    tfimage = tf.image.resizeBilinear(tfimage, [224, 224]);
-    const imageTensor = tfimage.expandDims(0);
-    const prediction = globalModel.predict(imageTensor);
-    
-    const predictionArray = await prediction.array();
-    const scores = predictionArray[0];
-    const predictedClass = scores.indexOf(Math.max(...scores));
-    return { predictedClass, probability: scores[predictedClass] };
-}
-
 // Endpoint to upload images and get predictions
 app.post('/predict', async (req, res) => {
     try {
@@ -55,7 +42,7 @@ app.post('/predict', async (req, res) => {
         const imagePath = path.join(__dirname, 'uploads', image.name);
         await image.mv(imagePath);
 
-        const { predictedClass, probability } = await predictImage(imagePath);
+        const { predictedClass, probability } = await predict(imagePath);
         
         // Optionally, delete the image after prediction to save space
         fs.unlinkSync(imagePath);

@@ -20,14 +20,13 @@ async function loadImageAsTensor(path) {
 async function predict(imageTensor) {
     const model = await loadModel();
     const prediction = model.predict(imageTensor);
-    prediction.print(); // Prints the raw prediction tensor
-
-    // Convert prediction to array and process
     const predictionArray = await prediction.array();
     const scores = predictionArray[0];
     const predictedClass = scores.indexOf(Math.max(...scores));
-    console.log(`Predicted class: ${predictedClass} with probability ${scores[predictedClass]}`);
+    return { predictedClass, probability: scores[predictedClass] };
 }
+module.exports = { predict };
+
 
 async function main() {
     // Correct path to the image
