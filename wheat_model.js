@@ -1,6 +1,9 @@
 const tf = require('@tensorflow/tfjs-node'); // Use '@tensorflow/tfjs' for browser
 const fs = require('fs');
 
+// Define class names based on your model's training
+const classNames = ['HSeptoria', 'Healthy', 'Yellow Rust', 'Brown Rust', 'Loose Smut']; // Update this array based on your model
+
 async function loadModel() {
     // Correct path to the model.json
     const model = await tf.loadLayersModel('file:///Users/shaashvatmittal/Desktop/Hackprinceton/Wheat_Health_Model/model.json');
@@ -22,17 +25,26 @@ async function predict(imageTensor) {
     const prediction = model.predict(imageTensor);
     const predictionArray = await prediction.array();
     const scores = predictionArray[0];
-    const predictedClass = scores.indexOf(Math.max(...scores));
-    return { predictedClass, probability: scores[predictedClass] };
+    const predictedClassIndex = scores.indexOf(Math.max(...scores));
+    const predictedClassName = classNames[predictedClassIndex]; // Map the predicted index to the class name
+    const probabilities = classNames.map((className, index) => ({ class: className, probability: scores[index] }));
+    return { predictions: probabilities, predictedClass: predictedClassName, highestProbability: Math.max(...scores) };
 }
-module.exports = { predict };
 
+module.exports = { predict };
 
 async function main() {
     // Correct path to the image
-    const imagePath = '/Volumes/Mannan\'s D/Dataset/BrownRust/Brown_rust001.jpg'; // Make sure this is the correct path to your image
+    const imagePath = '/Users/shaashvatmittal/Desktop/HackPrinceton/Septoria193.png'; // Make sure this is the correct path to your image
     const imageTensor = await loadImageAsTensor(imagePath);
-    await predict(imageTensor);
+    const prediction = await predict(imageTensor);
+    
+    console.log('Predictions:');
+    prediction.predictions.forEach(pred => {
+        console.log(`${pred.class}: ${pred.probability}`);
+    });
+
+    console.log(`\nPredicted Class with Highest Probability: ${prediction.predictedClass}, Probability: ${prediction.highestProbability}`);
 }
 
 main();
