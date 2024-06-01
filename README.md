@@ -1,5 +1,6 @@
 # FarmShield: A Paradigm Shift in Agricultural Insurance and Crop Protection
 - Winners of HackPrinceton 2024 under the Environment Category
+
   Made by Mannan Anand and Shaashvat Mittal
 
 ## Introduction
